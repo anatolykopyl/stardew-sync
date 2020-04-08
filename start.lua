@@ -1,6 +1,7 @@
 #!/usr/local/bin/lua
 
 fl = require('moonfltk')
+lfs = require('lfs')
 
 function to_pc(button)
     print(button:label())
@@ -27,7 +28,7 @@ end
 
 selected_device = ''
 selected_path = ''
-my_dir = os.getenv('PWD')
+my_dir = lfs.currentdir()
 local_dir = '/home/victoria/.config/StardewValley/Saves'
 mount_point = '/run/user/1000/gvfs'
 handle = io.popen('ls '..mount_point)
