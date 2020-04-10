@@ -2,18 +2,29 @@
 
 fl = require('moonfltk')
 lfs = require('lfs')
+require('lib/getOS')
+require('settings')
+
+OS = getOS()
+print('Detected OS: ' .. OS)
+
+arg = {...}
 
 function to_pc(button)
     print(button:label())
     if selected_device ~= '' then
-        os.execute('cp -rv '..selected_path..'/. '..local_dir)
+        if OS ~= 'Windows' then
+            os.execute('cp -rv '..selected_path..'/. '..local_dir)
+        end
     end
 end
 
 function to_phone(button)
     print(button:label())
     if selected_device ~= '' then
-        os.execute('cp -rv '..local_dir..'/. '..selected_path)
+        if OS ~= 'Windows' then
+            os.execute('cp -rv '..local_dir..'/. '..selected_path)
+        end
     end
 end
 
@@ -38,26 +49,28 @@ function refresh_devices()
 
     if win then
         if #phone_dir == 0 then
-	    device_choice:clear()
+	        device_choice:clear()
             device_choice:deactivate()
             to_pc_btn:deactivate()
             to_phone_btn:deactivate()
         else
-	    device_choice:activate()
-	    to_pc_btn:activate()
-	    to_phone_btn:activate()
+	        device_choice:activate()
+	        to_pc_btn:activate()
+	        to_phone_btn:activate()
             for i = 1, #phone_dir do
                 device_choice:add(phone_dir[i])
             end
-	end
+	    end
     end
 end
 
 selected_device = ''
 selected_path = ''
 my_dir = lfs.currentdir()
-local_dir = '/home/victoria/.config/StardewValley/Saves'
-mount_point = '/run/user/1000/gvfs'
+if OS ~= 'Windows' then
+    local_dir = settings.local_dir or '~/.config/StardewValley/Saves'
+    mount_point = '/run/user/1000/gvfs'
+end
 
 W, H = 320, 360
 
@@ -72,12 +85,16 @@ bg_img = fl.png_image(my_dir..'/img/bg.png')
 bg_box = fl.box(1, 1, W, H)
 bg_box:image(bg_img)
 
-title = fl.box(0, 10, W, 30, 'Выберите устройство:')
+if OS ~= 'Windows' then
+    --fl.box(0, 20, W, 30, 'Точка монтирования:')
+    
+end
+fl.box(0, 70, W, 30, 'Выберите устройство:')
 refresh_img = fl.png_image(my_dir..'/img/refresh.png')
-refresh_btn = fl.button(10, 50, 30, 30)
+refresh_btn = fl.button(10, 100, 30, 30)
 refresh_btn:callback(refresh_devices)
 refresh_btn:image(refresh_img)
-device_choice = fl.input_choice(50, 50, W-60, 30)
+device_choice = fl.input_choice(50, 100, W-60, 30)
 device_choice:callback(input_choice_cb, device_choice)
 
 to_pc_btn = fl.button(50, H/2, W-100, 30, 'На ПК')

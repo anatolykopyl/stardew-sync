@@ -1,0 +1,4 @@
+settings = {
+    locale = 'RU'
+}
+
