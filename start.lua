@@ -1,6 +1,5 @@
 #!/usr/local/bin/lua
 
-fl = require('moonfltk')
 lfs = require('lfs')
 require('lib/getOS')
 require('settings')
@@ -10,8 +9,17 @@ print('Detected OS: ' .. OS)
 
 arg = {...}
 
+silent_mode = arg[1] == '-s'
+if silent_mode then
+    print("silent_mode")
+else
+    fl = require('moonfltk')
+end
+
 function to_pc(button)
-    print(button:label())
+    if button then
+        print(button:label())
+    end
     if selected_device ~= '' then
         if OS ~= 'Windows' then
             os.execute('cp -rv '..selected_path..'/. '..local_dir)
@@ -20,7 +28,10 @@ function to_pc(button)
 end
 
 function to_phone(button)
-    print(button:label())
+    if button then
+        print(button:label())
+    end
+
     if selected_device ~= '' then
         if OS ~= 'Windows' then
             os.execute('cp -rv '..local_dir..'/. '..selected_path)
@@ -47,7 +58,7 @@ function refresh_devices()
         phone_dir[#phone_dir + 1] = i
     end
 
-    if win then
+    if win then     -- If fltk window created
         if #phone_dir == 0 then
 	        device_choice:clear()
             device_choice:deactivate()
@@ -72,42 +83,48 @@ if OS ~= 'Windows' then
     mount_point = '/run/user/1000/gvfs'
 end
 
-W, H = 320, 360
+if not silent_mode then
+    W, H = 320, 360
 
-fl.visual('rgb')
-win = fl.double_window(W, H, 'Синхронизатор')
-win:color(fl.WHITE)
-icon_img = fl.png_image(my_dir..'/img/icon.png')
-win:icon(icon_img)
-fl.background(240, 240, 240)
+    fl.visual('rgb')
+    win = fl.double_window(W, H, 'Синхронизатор')
+    win:color(fl.WHITE)
+    icon_img = fl.png_image(my_dir..'/img/icon.png')
+    win:icon(icon_img)
+    fl.background(240, 240, 240)
 
-bg_img = fl.png_image(my_dir..'/img/bg.png')
-bg_box = fl.box(1, 1, W, H)
-bg_box:image(bg_img)
+    bg_img = fl.png_image(my_dir..'/img/bg.png')
+    bg_box = fl.box(1, 1, W, H)
+    bg_box:image(bg_img)
 
-if OS ~= 'Windows' then
-    --fl.box(0, 20, W, 30, 'Точка монтирования:')
-    
+    fl.box(0, 70, W, 30, 'Выберите устройство:')
+    refresh_img = fl.png_image(my_dir..'/img/refresh.png')
+    refresh_btn = fl.button(10, 100, 30, 30)
+    refresh_btn:callback(refresh_devices)
+    refresh_btn:image(refresh_img)
+    device_choice = fl.input_choice(50, 100, W-60, 30)
+    device_choice:callback(input_choice_cb, device_choice)
+
+    to_pc_btn = fl.button(50, H/2, W-100, 30, 'На ПК')
+    to_pc_btn:callback(to_pc)
+    to_pc_btn:deactivate()
+    to_phone_btn = fl.button(50, H/2+40, W-100, 30, 'На телефон') 
+    to_phone_btn:callback(to_phone)
+    to_phone_btn:deactivate()
+
+    refresh_devices()
+
+    win:done()
+    win:show(arg[0], arg)
+
+    return fl.run()
+else
+    selected_path = mount_point..'/'..phone_dir[1]..'/Внутренняя\\ память/StardewValley'
+
+    if arg[2] == 'tophone' then
+        to_phone()
+    elseif arg[2] == 'topc' then
+        to_pc()
+    end
 end
-fl.box(0, 70, W, 30, 'Выберите устройство:')
-refresh_img = fl.png_image(my_dir..'/img/refresh.png')
-refresh_btn = fl.button(10, 100, 30, 30)
-refresh_btn:callback(refresh_devices)
-refresh_btn:image(refresh_img)
-device_choice = fl.input_choice(50, 100, W-60, 30)
-device_choice:callback(input_choice_cb, device_choice)
-
-to_pc_btn = fl.button(50, H/2, W-100, 30, 'На ПК')
-to_pc_btn:callback(to_pc)
-to_pc_btn:deactivate()
-to_phone_btn = fl.button(50, H/2+40, W-100, 30, 'На телефон') 
-to_phone_btn:callback(to_phone)
-to_phone_btn:deactivate()
-
-refresh_devices()
-
-win:done()
-win:show(arg[0], arg)
-
-return fl.run()
 
